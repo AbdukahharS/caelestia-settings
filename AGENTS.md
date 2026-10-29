@@ -35,8 +35,10 @@ Never write files owned by the Caelestia dots. Only the sanctioned override laye
 |---|---|
 | Colour scheme | `caelestia scheme set` CLI (`core/Schemes.qml`) |
 | Shell settings | `GlobalConfig.<section>.<key>` → `~/.config/caelestia/shell.json`; read + persistence automatic |
-| Hyprland settings | `core/HyprVars.qml` writes **only** `~/.config/caelestia/hypr-vars.lua`; live-applies via `hyprctl keyword`; unmappable entries (default apps) need `HyprVars.reloadHypr()` |
-| Monitors/Displays | `core/Displays.qml` writes **only** `~/.config/caelestia/monitors.lua` (`hl.monitor({...})` calls, required from `hypr-user.lua` — the require line is bootstrapped once at startup); live state from `Quickshell.Hyprland` IPC, changes applied via `hyprctl keyword monitor` |
+| Hyprland settings | `core/HyprVars.qml` writes **only** `~/.config/caelestia/hypr-vars.lua`; merged at config load |
+| Monitors/Displays | `core/Displays.qml` writes **only** `~/.config/caelestia/monitors.lua` (`hl.monitor({...})` calls, required from `hypr-user.lua` — the require line is bootstrapped once at startup); live state from `Quickshell.Hyprland` IPC |
+
+**Applying config changes**: `hyprctl keyword` is rejected by Hyprland's native Lua config ("non-legacy parsers") — do not use it. Both `hypr-vars.lua` and `monitors.lua` take effect through Hyprland's config auto-reload (file watch); `core/Displays.qml` additionally calls `hyprctl reload` after each write for immediacy.
 
 Hyprland details:
 
@@ -52,4 +54,6 @@ Hyprland details:
 ## Known quirks
 
 - `ui/AppSelectRow.qml` exists because the upstream `SelectRow` menu stops repainting inside this app's `FloatingWindow` (Qt layering bug). Don't swap it back for the upstream control.
+- **Gating the dropdown overlay uses `visible`, not `enabled`**: child MouseAreas of a disabled MouseArea still receive clicks in this Quickshell build — `enabled` alone left the collapsed panel at (0,0) live as a click target over the sidebar.
 - `core/Schemes.qml` hardcodes the installed schemes dir (`/usr/lib/python3.14/site-packages/caelestia/data/schemes`) — bump it when the Caelestia/Python package version changes.
+- A monitor rule that omits `scale` inherits Hyprland's **auto** scale (2 on this panel at native res), not the dots' scale = 1 — `writeOverrides` always pins scale explicitly.
