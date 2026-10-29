@@ -49,6 +49,7 @@ FloatingWindow {
                 AppearancePage {}
                 ShellPage {}
                 HyprlandPage {}
+                DisplaysPage {}
             }
         }
     }

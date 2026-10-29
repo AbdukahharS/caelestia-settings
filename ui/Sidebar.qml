@@ -90,6 +90,10 @@ Item {
                 {
                     "icon": "window",
                     "label": "Hyprland"
+                },
+                {
+                    "icon": "monitor",
+                    "label": "Displays"
                 }
             ]
 
