@@ -1,0 +1,7 @@
+# Machine-specific symlinks into the installed Caelestia shell — recreated by
+# scripts/setup-symlinks.sh
+/components
+/services
+/utils
+/modules
+/assets
