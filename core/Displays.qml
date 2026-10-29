@@ -14,10 +14,13 @@ import Quickshell.Hyprland
 /// ~/.config/caelestia/monitors.lua as `hl.monitor({...})` calls; the file is
 /// loaded from hypr-user.lua via `require("monitors")`, which this singleton
 /// inserts once if missing. Fields equal to the dots' defaults (mode
-/// "preferred", scale 1, vrr off, enabled) are omitted rather than written,
-/// and unknown fields from hand edits are preserved verbatim, so
-/// `caelestia update` can never conflict with the app. Every change is also
-/// applied to the running session instantly via `hyprctl keyword monitor`.
+/// "preferred", vrr off, enabled) are omitted rather than written — scale is
+/// always pinned, since a rule without it inherits Hyprland's auto scale
+/// instead of the dots' scale = 1. Unknown fields from hand edits are
+/// preserved verbatim, so `caelestia update` can never conflict with the
+/// app. Every change is applied to the running session via `hyprctl reload`
+/// (keyword writes are rejected by Hyprland's native Lua parser; the reload
+/// re-runs the config including this file).
 Singleton {
     id: root
 
@@ -231,18 +234,10 @@ Singleton {
     // --- Setters (persist + live-apply) ---
 
     function setResolution(name: string, res: string): void {
-        if (res === "preferred") {
-            // Resetting must actually return to preferred: the generic
-            // applyMonitor preserves the current explicit mode. Mutate +
-            // persist here and apply once with the forced mode — a second
-            // synchronous applyMonitor would be dropped while the first
-            // Process is still running.
-            mutateField(name, "mode", quoteLua("preferred"), true);
-            applyMonitor(name, "preferred");
-            return;
-        }
-        const rate = rateOf(effectiveMode(name));
-        setField(name, "mode", quoteLua(rate ? `${res}@${rate}` : res), false);
+        // "preferred" is the inherited default, so this resets the mode.
+        // The reload that applies it re-runs the Lua config, where the
+        // absent override naturally falls back to preferred.
+        setField(name, "mode", quoteLua(res), res === "preferred");
     }
 
     function setRate(name: string, rate: string): void {
@@ -266,16 +261,9 @@ Singleton {
     }
 
     /// Stores a field as raw Lua RHS text, drops it when it matches the
-    /// inherited default, prunes empty monitor entries, then persists and
-    /// live-applies.
+    /// inherited default, prunes empty monitor entries, then persists. The
+    /// write triggers Hyprland's config reload, which applies the new rules.
     function setField(name: string, field: string, raw: string, isDefault: bool): void {
-        mutateField(name, field, raw, isDefault);
-        applyMonitor(name);
-    }
-
-    /// setField without the live apply — for callers that apply themselves
-    /// (e.g. with a forced mode).
-    function mutateField(name: string, field: string, raw: string, isDefault: bool): void {
         const next = Object.assign({}, overrides);
         const entry = Object.assign({}, next[name] ?? {});
 
@@ -291,28 +279,15 @@ Singleton {
 
         overrides = next;
         writeOverrides();
+        reloadProc.running = true;
     }
 
-    /// Applies a monitor's effective rule to the running session via
-    /// `hyprctl keyword monitor`. Non-overridden fields keep their current
-    /// live values so unrelated changes never move the monitor; `forcedMode`
-    /// (used by the "Preferred (default)" reset) overrides that for mode.
-    function applyMonitor(name: string, forcedMode: string): void {
-        const ipc = ipcFor(name);
-        const entry = overrides[name] ?? {};
-        const disabled = entry.disabled !== undefined ? entry.disabled === "true" : !!ipc.disabled;
-
-        if (disabled) {
-            liveProc.command = ["hyprctl", "keyword", "monitor", `${name},disable`];
-        } else {
-            const mode = forcedMode ?? (entry.mode !== undefined ? unquote(entry.mode) : liveMode(ipc));
-            const scale = entry.scale !== undefined ? parseFloat(entry.scale) : (ipc.scale ?? defaultScale);
-            const parts = [name, mode, `${ipc.x ?? 0}x${ipc.y ?? 0}`, `${scale}`];
-            if (effectiveVrr(name))
-                parts.push("vrr", "1");
-            liveProc.command = ["hyprctl", "keyword", "monitor", parts.join(",")];
-        }
-        liveProc.running = true;
+    /// Applies the overridden rules to the running session by reloading the
+    /// Lua config (which re-reads monitors.lua). `hyprctl keyword` cannot be
+    /// used here: Hyprland's native Lua config is a non-legacy parser and
+    /// rejects keyword writes.
+    function applyChanges(): void {
+        reloadProc.running = true;
     }
 
     // --- Persistence ---
@@ -337,6 +312,12 @@ Singleton {
             text += `\nhl.monitor({\n    output = ${quoteLua(name)},\n`;
             for (const key of keys)
                 text += `    ${key} = ${entry[key]},\n`;
+            // Scale must always be pinned: a rule without it inherits
+            // Hyprland's auto scale (2 on this panel at native res), not the
+            // dots' scale = 1 — a specific-output rule replaces the generic
+            // default rule entirely.
+            if (!entry.scale)
+                text += `    scale = ${defaultScale},\n`;
             text += "})\n";
         }
 
@@ -373,7 +354,18 @@ Singleton {
             const output = entry.output ? unquote(entry.output) : null;
             if (output) {
                 delete entry.output;
-                result[output] = entry;
+                // No-op fields (equal to the inherited defaults) are dropped
+                // so the in-memory state stays "what actually differs".
+                if (entry.mode && unquote(entry.mode) === "preferred")
+                    delete entry.mode;
+                if (entry.scale !== undefined && parseFloat(entry.scale) === defaultScale)
+                    delete entry.scale;
+                if (entry.vrr !== undefined && (parseFloat(entry.vrr) === 0 || entry.vrr === "false"))
+                    delete entry.vrr;
+                if (entry.disabled === "false")
+                    delete entry.disabled;
+                if (Object.keys(entry).length > 0)
+                    result[output] = entry;
             }
         }
 
@@ -392,7 +384,9 @@ Singleton {
     }
 
     Process {
-        id: liveProc
+        id: reloadProc
+
+        command: ["hyprctl", "reload"]
     }
 
     FileView {
