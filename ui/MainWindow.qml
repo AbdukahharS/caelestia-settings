@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import Quickshell
 import Caelestia.Config
 import qs.components
+import qs.core
 import qs.services
 import qs.pages
 
@@ -17,16 +18,21 @@ FloatingWindow {
     surfaceFormat.opaque: false
     visible: true
 
-    implicitWidth: 980
-    implicitHeight: 660
-    minimumSize.width: 780
-    minimumSize.height: 540
+    implicitWidth: WindowState.restoredWidth || WindowState.defaultWidth
+    implicitHeight: WindowState.restoredHeight || WindowState.defaultHeight
+    minimumSize.width: WindowState.minWidth
+    minimumSize.height: WindowState.minHeight
 
     contentItem.Config.screen: screen.name
     contentItem.Tokens.screen: screen.name
 
-    onVisibleChanged: if (!visible)
-        Qt.quit()
+    onVisibleChanged: if (!visible) {
+        WindowState.flush();
+        Qt.quit();
+    }
+
+    onWidthChanged: WindowState.noteSize(width, height)
+    onHeightChanged: WindowState.noteSize(width, height)
 
     RowLayout {
         anchors.fill: parent
