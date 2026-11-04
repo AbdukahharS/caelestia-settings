@@ -35,12 +35,35 @@ Item {
         label: labelText
         subtext: sub
         menuItems: {
+            // Depend on options itself, not just items.count: a rebuild with
+            // the same count (e.g. picking a scale) must not leave a stale
+            // array of destroyed MenuItems (blank chip + blank popover).
+            const opts = choice.options;
             const out = [];
-            for (let i = 0; i < items.count; i++)
-                out.push(items.objectAt(i));
+            for (let i = 0; i < items.count && i < opts.length; i++) {
+                const item = items.objectAt(i);
+                if (item)
+                    out.push(item);
+            }
             return out;
         }
-        active: menuItems.find(i => i.value === selectedValue) ?? null
+        // Numbers (scale) come back from Hyprland's IPC rounded to 8
+        // significant digits (e.g. 1.0666667) while option values are the
+        // exact doubles (128/120) — strict equality can never match. 0.001
+        // is far below the 1/120 grid spacing scale values live on, matching
+        // the tolerance already used in Displays.scaleChoices.
+        active: {
+            for (let i = 0; i < menuItems.length; i++) {
+                const v = menuItems[i].value;
+                if (typeof v === "number" && typeof selectedValue === "number") {
+                    if (Math.abs(v - selectedValue) < 0.001)
+                        return menuItems[i];
+                } else if (v === selectedValue) {
+                    return menuItems[i];
+                }
+            }
+            return null;
+        }
         onSelected: item => choice.picked(item.value)
 
         Instantiator {
