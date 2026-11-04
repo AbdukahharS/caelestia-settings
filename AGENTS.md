@@ -36,6 +36,7 @@ Never write files owned by the Caelestia dots. Only the sanctioned override laye
 | Colour scheme | `caelestia scheme set` CLI (`core/Schemes.qml`) |
 | Shell settings | `GlobalConfig.<section>.<key>` → `~/.config/caelestia/shell.json`; read + persistence automatic |
 | Hyprland settings | `core/HyprVars.qml` writes **only** `~/.config/caelestia/hypr-vars.lua`; merged at config load |
+| Keybinds (`kb*` variables) | same `core/HyprVars.qml` / `hypr-vars.lua` layer (`bindsSchema` + `setBind`/`resetBind`); values are bare strings or `{ "A", "B" }` tables |
 | Monitors/Displays | `core/Displays.qml` writes **only** `~/.config/caelestia/monitors.lua` (`hl.monitor({...})` calls, required from `hypr-user.lua` — the require line is bootstrapped once at startup); live state from `Quickshell.Hyprland` IPC |
 
 **Applying config changes**: `hyprctl keyword` is rejected by Hyprland's native Lua config ("non-legacy parsers") — do not use it. Both `hypr-vars.lua` and `monitors.lua` take effect through Hyprland's config auto-reload (file watch); `core/Displays.qml` additionally calls `hyprctl reload` after each write for immediacy.
@@ -50,8 +51,17 @@ Hyprland details:
 - **Shell**: add a row in `pages/ShellPage.qml` bound to the matching `GlobalConfig.<section>.<key>`.
 - **Hyprland**: add a `schema` entry in `core/HyprVars.qml` (`key` = `variables.lua` name, `live` = hyprctl keyword path if mappable, `type` = `"int" | "real" | "bool" | "string" | "app"`), then a row in `pages/HyprlandPage.qml` (local `NumRow`/`BoolRow`/`AppRow` components; `AppRow` wraps `ui/AppSelectRow.qml`).
 - **Monitor/Display**: specs stream live from `Quickshell.Hyprland` (`Hyprland.monitors` + `lastIpcObject` — no polling); controls live in `pages/DisplaysPage.qml`, setters/persistence in `core/Displays.qml`. Only overridden fields reach `monitors.lua`; unknown hand-edited fields there are preserved verbatim.
+- **Keybind**: add a `bindsSchema` entry in `core/HyprVars.qml` (`key` = `kb*` variable in `variables.lua`, `label`, `section`; `prefix: true` for the modifier-only prefixes keybinds.lua combines with 0–9). The Keybinds page (`pages/KeybindsPage.qml`) renders sections from the schema — no per-row wiring. Qt key → keysym mapping lives in `pages/KeyNames.js`. Binds have no `hyprctl keyword` mapping; every commit calls `hyprctl reload`.
+
+Keybinds page gotchas:
+
+- **Capture only sees free combos.** Hyprland consumes combos that already have a bind before they reach any client, so capturing a currently-bound combo fires the old action and the app sees nothing. The page flags conflicting chips (from schema binds plus `KeyNames.builtinBinds` for the hardcoded ones) instead of pretending capture works.
+- **Never rewrite values `parseBind` flags `verbatim`** (concatenated expressions etc.) — the page renders them read-only so `setBind` can't silently drop parts of them.
+- **Don't access a JS array's `.keys` field** — `Array.prototype.keys` is a function in QML's V4 engine; `parseBind`'s array field is named `binds` for that reason.
 
 ## Known quirks
+
+- `qmllint` on PATH is Qt5's and silently exits 255 on any file containing `pragma ComponentBehavior: Bound` without checking anything — use `/usr/lib/qt6/bin/qmllint` (its only complaints are environmental `qs.*` import resolution outside the Quickshell runtime). QML `console.*` output goes to the per-instance `~/.local/state/quickshell` log, not stderr, unless `QT_FORCE_STDERR_LOGGING=1`.
 
 - `ui/AppSelectRow.qml` exists because the upstream `SelectRow` menu stops repainting inside this app's `FloatingWindow` (Qt layering bug). Don't swap it back for the upstream control.
 - **Gating the dropdown overlay uses `visible`, not `enabled`**: child MouseAreas of a disabled MouseArea still receive clicks in this Quickshell build — `enabled` alone left the collapsed panel at (0,0) live as a click target over the sidebar.

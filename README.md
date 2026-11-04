@@ -9,6 +9,7 @@ Currently manages:
 - **Style** — Caelestia colour schemes plus the wallpaper-derived dynamic scheme (swatch previews, apply, light/dark)
 - **Shell** — bar, launcher, sidebar and service settings (writes `~/.config/caelestia/shell.json` via `GlobalConfig`, the same API the shell itself uses)
 - **Hyprland** — gaps, rounding, blur, shadow, input, default apps (writes the Caelestia override layer `~/.config/caelestia/hypr-vars.lua`, applies instantly via `hyprctl keyword`)
+- **Binds** — all variable-driven Hyprland keybinds (`kb*` entries in `variables.lua`, via the same `hypr-vars.lua` override layer; live key capture, applies via `hyprctl reload`)
 
 ## Update safety
 
@@ -20,6 +21,7 @@ override layers designed for user customisation:
 | Colour scheme | (via `caelestia scheme` CLI) | instantly, shell + app follow |
 | Shell settings | `~/.config/caelestia/shell.json` | instantly (shell hot-reloads config) |
 | Hyprland settings | `~/.config/caelestia/hypr-vars.lua` | `hyprctl keyword` where mapped + `hyprctl reload` |
+| Keybinds (`kb*` variables) | `~/.config/caelestia/hypr-vars.lua` | `hyprctl reload` (binds have no keyword mapping) |
 
 `caelestia update` merges these override files, so upgrades can't conflict.
 If a Caelestia/Quickshell update changes component APIs, only this app's glue
@@ -85,6 +87,15 @@ components, services, utils, modules, assets -> symlinks into
 - **Hyprland setting**: add an entry to `schema` in `core/HyprVars.qml`
   (`key` = name in `variables.lua`, `live` = hyprctl keyword if mappable),
   then drop a `NumRow`/`BoolRow`/`StrRow` into `pages/HyprlandPage.qml`.
+- **Keybind**: add an entry to `bindsSchema` in `core/HyprVars.qml`
+  (`key` = `kb*` variable, `label`, `section`, `prefix: true` for the
+  modifier-only prefixes); the Keybinds page renders sections from the schema
+  automatically. Capture mapping (Qt key → Hyprland keysym) lives in
+  `pages/KeyNames.js`. Binds cannot be applied with `hyprctl keyword` on the
+  Lua config, so every commit reloads Hyprland. Two capture limits are
+  inherent to Wayland and surfaced in the page: combos already bound are
+  consumed by the compositor (old action fires, nothing is captured — the
+  page flags conflicts instead), and mouse-event binds are edited as text.
 
 Values equal to the `variables.lua` defaults are *removed* from
 `hypr-vars.lua` rather than written, keeping the override file minimal.
