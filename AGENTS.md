@@ -57,3 +57,4 @@ Hyprland details:
 - **Gating the dropdown overlay uses `visible`, not `enabled`**: child MouseAreas of a disabled MouseArea still receive clicks in this Quickshell build — `enabled` alone left the collapsed panel at (0,0) live as a click target over the sidebar.
 - `core/Schemes.qml` hardcodes the installed schemes dir (`/usr/lib/python3.14/site-packages/caelestia/data/schemes`) — bump it when the Caelestia/Python package version changes.
 - A monitor rule that omits `scale` inherits Hyprland's **auto** scale (2 on this panel at native res), not the dots' scale = 1 — `writeOverrides` always pins scale explicitly.
+- Quickshell `FileView` loads asynchronously: `text()` returns `""` at `Component.onCompleted` unless the view sets `blockLoading: true`. Every startup read in `core/` needs that flag — `Displays.qml`'s missing flag made its bootstrap write wipe `monitors.lua` (and rewrite `hypr-user.lua`) on every launch, silently resetting settings like display scale.

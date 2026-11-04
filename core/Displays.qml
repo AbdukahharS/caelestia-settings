@@ -393,6 +393,12 @@ Singleton {
         id: storage
 
         path: root.overridesFile
+        // Reads must block until loaded: without this, text() returns "" in
+        // Component.onCompleted (the async preload hasn't finished), so the
+        // bootstrap branch below fired every launch and overwrote saved
+        // overrides with an empty rules file — which Hyprland's file watch
+        // then applied, resetting settings like scale to the dots' defaults.
+        blockLoading: true
         atomicWrites: true
         watchChanges: true
         onLoaded: root.overrides = root.parseMonitors(text())
@@ -403,6 +409,10 @@ Singleton {
         id: userConf
 
         path: root.userConfFile
+        // Blocked like storage: ensureRequired() reads this in
+        // Component.onCompleted, and an empty read there rewrote the file
+        // with just the require block, dropping any other content.
+        blockLoading: true
         watchChanges: false
     }
 

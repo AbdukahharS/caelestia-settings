@@ -320,6 +320,10 @@ Singleton {
         id: storage
 
         path: root.overridesFile
+        // Reads must block until loaded: without this, text() returns "" in
+        // Component.onCompleted, and overrides briefly started empty — a
+        // setField in that window would clobber existing overrides.
+        blockLoading: true
         atomicWrites: true
         watchChanges: true
         onLoaded: root.overrides = root.parseLua(text())
@@ -330,6 +334,9 @@ Singleton {
         id: defaultsView
 
         path: root.defaultsFile
+        // Blocked like storage: Component.onCompleted parses this before any
+        // async preload can finish.
+        blockLoading: true
         watchChanges: true
         onLoaded: root.defaults = root.parseLua(text())
         onFileChanged: root.defaults = root.parseLua(text())
