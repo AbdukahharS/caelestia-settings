@@ -92,6 +92,10 @@ Item {
                     "label": "Hyprland"
                 },
                 {
+                    "icon": "keyboard",
+                    "label": "Binds"
+                },
+                {
                     "icon": "monitor",
                     "label": "Displays"
                 }

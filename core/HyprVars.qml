@@ -160,6 +160,138 @@ Singleton {
 
     signal valuesChanged()
 
+    /// Curated keybinds exposed in the Keybinds page.
+    ///
+    /// Keybinds are plain `kb*` variables consumed by
+    /// ~/.config/hypr/hyprland/keybinds.lua, so they ride the same override
+    /// layer as every other Hyprland variable here. Values are one quoted
+    /// string or an array of quoted strings ({ "A", "B" }); there is no
+    /// `live` keyword for binds — changes apply via `hyprctl reload`.
+    ///   key     — variables.lua entry name
+    ///   label   — action description
+    ///   section — display group on the page (contiguous, in order)
+    ///   prefix  — modifier combined with 0-9 by keybinds.lua; single string
+    ///   hint    — shown in place of "Default: …" when not overridden
+    readonly property var bindsSchema: [
+        // Prefixes (combined with number keys 1-0 by keybinds.lua)
+        {
+            "key": "kbGoToWs",
+            "label": "Workspace focus modifier",
+            "section": "Prefixes",
+            "prefix": true,
+            "hint": "Combined with number keys 1–0"
+        },
+        {
+            "key": "kbGoToWsGroup",
+            "label": "Workspace group focus modifier",
+            "section": "Prefixes",
+            "prefix": true,
+            "hint": "Combined with number keys 1–0"
+        },
+        {
+            "key": "kbMoveWinToWs",
+            "label": "Move to workspace modifier",
+            "section": "Prefixes",
+            "prefix": true,
+            "hint": "Combined with number keys 1–0"
+        },
+        {
+            "key": "kbMoveWinToWsSilent",
+            "label": "Silent move modifier",
+            "section": "Prefixes",
+            "prefix": true,
+            "hint": "Combined with number keys 1–0"
+        },
+        {
+            "key": "kbMoveWinToWsGroup",
+            "label": "Move to workspace group modifier",
+            "section": "Prefixes",
+            "prefix": true,
+            "hint": "Combined with number keys 1–0"
+        },
+
+        // Workspaces
+        { "key": "kbMoveWinToWsSpecial", "label": "Move window to special workspace", "section": "Workspaces" },
+        { "key": "kbMoveWinFromWsSpecial", "label": "Move window from special workspace", "section": "Workspaces" },
+        { "key": "kbMoveWinToWsNext", "label": "Move window to next workspace", "section": "Workspaces" },
+        { "key": "kbMoveWinToWsPrev", "label": "Move window to previous workspace", "section": "Workspaces" },
+        { "key": "kbNextWs", "label": "Next workspace", "section": "Workspaces" },
+        { "key": "kbPrevWs", "label": "Previous workspace", "section": "Workspaces" },
+        { "key": "kbNextWsGroup", "label": "Next workspace group", "section": "Workspaces" },
+        { "key": "kbPrevWsGroup", "label": "Previous workspace group", "section": "Workspaces" },
+
+        // Window groups
+        { "key": "kbWindowCycleNext", "label": "Cycle to next window", "section": "Window groups" },
+        { "key": "kbWindowCyclePrev", "label": "Cycle to previous window", "section": "Window groups" },
+        { "key": "kbWindowGroupCycleNext", "label": "Cycle to next window group", "section": "Window groups" },
+        { "key": "kbWindowGroupCyclePrev", "label": "Cycle to previous window group", "section": "Window groups" },
+        { "key": "kbUngroup", "label": "Remove window from group", "section": "Window groups" },
+        { "key": "kbToggleGroup", "label": "Toggle window group", "section": "Window groups" },
+        { "key": "kbGroupLockActive", "label": "Lock active group", "section": "Window groups" },
+
+        // Window actions
+        { "key": "kbWindowDecreaseWidth", "label": "Decrease window width", "section": "Window actions" },
+        { "key": "kbWindowIncreaseWidth", "label": "Increase window width", "section": "Window actions" },
+        { "key": "kbWindowDecreaseHeight", "label": "Decrease window height", "section": "Window actions" },
+        { "key": "kbWindowIncreaseHeight", "label": "Increase window height", "section": "Window actions" },
+        { "key": "kbMoveWindow", "label": "Move window (drag)", "section": "Window actions" },
+        { "key": "kbResizeWindow", "label": "Resize window (drag)", "section": "Window actions" },
+        { "key": "kbCenterWindow", "label": "Center window", "section": "Window actions" },
+        { "key": "kbNormalizeWindow", "label": "Normalize window size", "section": "Window actions" },
+        { "key": "kbWindowPip", "label": "Picture-in-picture", "section": "Window actions" },
+        { "key": "kbPinWindow", "label": "Pin window", "section": "Window actions" },
+        { "key": "kbWindowFullscreen", "label": "Fullscreen", "section": "Window actions" },
+        { "key": "kbWindowBorderedFullscreen", "label": "Bordered fullscreen (maximize)", "section": "Window actions" },
+        { "key": "kbToggleWindowFloating", "label": "Toggle floating", "section": "Window actions" },
+        { "key": "kbCloseWindow", "label": "Close window", "section": "Window actions" },
+
+        // Special workspaces
+        { "key": "kbSpecialWs", "label": "Toggle special workspace", "section": "Special workspaces" },
+        { "key": "kbSystemMonitorWs", "label": "Toggle system monitor workspace", "section": "Special workspaces" },
+        { "key": "kbMusicWs", "label": "Toggle music workspace", "section": "Special workspaces" },
+        { "key": "kbCommunicationWs", "label": "Toggle communication workspace", "section": "Special workspaces" },
+        { "key": "kbTodoWs", "label": "Toggle todo workspace", "section": "Special workspaces" },
+
+        // Apps
+        { "key": "kbTerminal", "label": "Terminal", "section": "Apps" },
+        { "key": "kbBrowser", "label": "Browser", "section": "Apps" },
+        { "key": "kbEditor", "label": "Editor", "section": "Apps" },
+        { "key": "kbFileExplorer", "label": "File explorer", "section": "Apps" },
+        { "key": "kbAudioSettings", "label": "Audio settings", "section": "Apps" },
+
+        // Utilities
+        { "key": "kbScreenshot", "label": "Screenshot (fullscreen)", "section": "Utilities" },
+        { "key": "kbScreenshotFreeze", "label": "Screenshot (frozen)", "section": "Utilities" },
+        { "key": "kbScreenshotRegion", "label": "Screenshot (region)", "section": "Utilities" },
+        { "key": "kbRecord", "label": "Record screen", "section": "Utilities" },
+        { "key": "kbRecordSound", "label": "Record screen with sound", "section": "Utilities" },
+        { "key": "kbRecordRegion", "label": "Record screen region", "section": "Utilities" },
+        { "key": "kbColorPicker", "label": "Color picker", "section": "Utilities" },
+
+        // Media
+        { "key": "kbMediaToggle", "label": "Play / pause media", "section": "Media" },
+        { "key": "kbMediaNext", "label": "Next track", "section": "Media" },
+        { "key": "kbMediaPrev", "label": "Previous track", "section": "Media" },
+        { "key": "kbMediaStop", "label": "Stop media", "section": "Media" },
+        { "key": "kbVolumeMute", "label": "Mute output", "section": "Media" },
+
+        // Misc
+        { "key": "kbLauncher", "label": "Launcher", "section": "Misc" },
+        { "key": "kbSession", "label": "Session menu", "section": "Misc" },
+        { "key": "kbShowSidebar", "label": "Show sidebar", "section": "Misc" },
+        { "key": "kbClearNotifs", "label": "Clear notifications", "section": "Misc" },
+        { "key": "kbShowPanels", "label": "Show all panels", "section": "Misc" },
+        { "key": "kbLock", "label": "Lock session", "section": "Misc" },
+        { "key": "kbRestoreLock", "label": "Restore lock screen", "section": "Misc" },
+        { "key": "kbSleep", "label": "Sleep", "section": "Misc" },
+
+        // Clipboard & emoji
+        { "key": "kbClipboard", "label": "Clipboard history", "section": "Clipboard & emoji" },
+        { "key": "kbClipboardDel", "label": "Delete clipboard history", "section": "Clipboard & emoji" },
+        { "key": "kbClipboardPasteLatest", "label": "Paste latest clipboard item", "section": "Clipboard & emoji" },
+        { "key": "kbEmoji", "label": "Emoji picker", "section": "Clipboard & emoji" }
+    ]
+
     function entry(key: string): var {
         return schema.find(s => s.key === key) ?? null;
     }
@@ -277,6 +409,162 @@ Singleton {
             return `"${s}"`;
         }
         return `${v}`;
+    }
+
+    // ------------------------------------------------------------------
+    // Keybinds (see bindsSchema above)
+    // ------------------------------------------------------------------
+
+    function bindEntry(key: string): var {
+        return bindsSchema.find(s => s.key === key) ?? null;
+    }
+
+    function unescapeLua(s: string): string {
+        return s.replace(/\\["\\]/g, ch => ch[1]);
+    }
+
+    /// Parses a raw Lua right-hand side into { keys: string[], verbatim: bool }.
+    /// `verbatim` marks values this simple parser must not rewrite (e.g.
+    /// concatenated expressions) — the page shows them read-only so a write
+    /// can never drop part of them.
+    function parseBind(raw: string): var {
+        const s = `${raw ?? ""}`.trim();
+
+        // Single quoted string
+        let m = s.match(/^"((?:[^"\\]|\\.)*)"$/);
+        if (m)
+            return { "binds": m[1] === "" ? [] : [unescapeLua(m[1])], "verbatim": false };
+
+        // Lua array table: { "A", "B" }
+        m = s.match(/^\{(.*)\}$/);
+        if (m) {
+            const inner = m[1];
+            const binds = [];
+            const re = /"((?:[^"\\]|\\.)*)"/g;
+            let mm;
+            while ((mm = re.exec(inner)) !== null)
+                binds.push(unescapeLua(mm[1]));
+            // Only rewrite when the table is exactly a list of strings —
+            // anything else (expressions, trailing entries) stays verbatim.
+            const leftover = inner.replace(/"(?:[^"\\]|\\.)*"/g, "").replace(/[\s,]/g, "");
+            if (binds.length > 0 && leftover === "")
+                return { "binds": binds, "verbatim": false };
+            return { "binds": binds, "verbatim": true };
+        }
+
+        return { "binds": [], "verbatim": true };
+    }
+
+    /// Raw Lua RHS for a list of bind strings: one key stays a bare string,
+    /// several become an array table, none becomes "" (action disabled).
+    function formatBind(keys: var): string {
+        const q = k => `"${`${k}`.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`;
+        if (!keys || keys.length === 0)
+            return `""`;
+        if (keys.length === 1)
+            return q(keys[0]);
+        return `{ ${keys.map(q).join(", ")} }`;
+    }
+
+    /// Canonicalises a bind string for display/writing: trims tokens, drops
+    /// stray commas, de-dupes and orders modifiers SUPER > CTRL > ALT > SHIFT.
+    /// Returns "" when no actual key remains (modifiers only).
+    function normaliseBind(s: string): string {
+        const order = ["SUPER", "CTRL", "ALT", "SHIFT"];
+        const mods = [];
+        let key = "";
+        for (let token of `${s}`.split("+")) {
+            token = token.trim().replace(/,+$/, "");
+            if (token === "")
+                continue;
+            const u = token.toUpperCase();
+            if (order.includes(u)) {
+                if (!mods.includes(u))
+                    mods.push(u);
+            } else if (key === "") {
+                key = token;
+            } else {
+                key += " + " + token; // unexpected extra keys: keep them
+            }
+        }
+        if (key === "")
+            return "";
+        mods.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+        if (/^[a-z]$/.test(key))
+            key = key.toUpperCase();
+        // hyprctl binds shows mouse tokens stored lowercase (mouse_down);
+        // keep the written form canonical too.
+        if (/^mouse/i.test(key))
+            key = key.toLowerCase();
+        return mods.concat([key]).join(" + ");
+    }
+
+    /// Comparison token for a bind: mods and key sorted, lowercased, spaces
+    /// stripped — so "SUPER + T" and "T + super" are the same bind.
+    function bindToken(bind: string): string {
+        return `${bind}`.split("+").map(t => t.trim().toLowerCase()).filter(t => t !== "").sort().join("+");
+    }
+
+    /// True when `raw` describes the same key set as the variables.lua
+    /// default, ignoring quote style and spacing. Values parseBind flags
+    /// verbatim are never considered equal — a rewrite would drop parts.
+    function bindMatchesDefault(raw: string, key: string): bool {
+        const d = defaults[key];
+        if (d === undefined)
+            return false;
+        const dp = parseBind(d);
+        const np = parseBind(raw);
+        if (dp.verbatim || np.verbatim)
+            return false;
+        return dp.binds.map(bindToken).sort().join("|") === np.binds.map(bindToken).sort().join("|");
+    }
+
+    /// Current binds for a keybind entry as a string list.
+    function bindValue(key: string): var {
+        return parseBind(value(key)).binds;
+    }
+
+    /// Full parse of a keybind entry's current value: { binds, verbatim }.
+    function bindParsed(key: string): var {
+        return parseBind(value(key));
+    }
+
+    /// Sets a bind entry and applies it: writes the override file (dropping
+    /// the override when it matches the default) and reloads Hyprland, since
+    /// binds have no `hyprctl keyword` mapping.
+    function setBind(entry: var, keys: var): void {
+        const norm = [];
+        for (const k of keys) {
+            const n = normaliseBind(`${k}`);
+            if (n !== "")
+                norm.push(n);
+        }
+
+        const raw = formatBind(norm);
+        const next = Object.assign({}, overrides);
+
+        if (bindMatchesDefault(raw, entry.key))
+            delete next[entry.key]; // matches default → no override needed
+        else
+            next[entry.key] = raw;
+
+        overrides = next;
+        writeOverrides();
+        valuesChanged();
+        reloadHypr();
+    }
+
+    /// Resets a bind entry back to the variables.lua default.
+    function resetBind(entry: var): void {
+        if (!isOverridden(entry.key))
+            return;
+
+        const next = Object.assign({}, overrides);
+        delete next[entry.key];
+        overrides = next;
+        writeOverrides();
+        valuesChanged();
+        reloadHypr();
     }
 
     function reloadHypr(): void {

@@ -55,6 +55,7 @@ FloatingWindow {
                 AppearancePage {}
                 ShellPage {}
                 HyprlandPage {}
+                KeybindsPage {}
                 DisplaysPage {}
             }
         }
