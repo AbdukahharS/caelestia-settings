@@ -9,10 +9,13 @@ import qs.components.containers
 import qs.components.controls
 import qs.core
 import qs.services
+import qs.ui
 import qs.modules.nexus.common
 
 Item {
     id: root
+
+    readonly property list<string> chipKeys: ["primary", "primaryContainer", "secondaryContainer", "tertiaryContainer", "surfaceContainerHigh"]
 
     /// Parses a scheme .txt file (`name hex` per line) into swatch chip colours.
     function parseChips(text: string): var {
@@ -22,107 +25,85 @@ Item {
             if (m)
                 map[m[1]] = `#${m[2]}`;
         }
-        return ["primary", "primaryContainer", "secondaryContainer", "tertiaryContainer", "surfaceContainerHigh"].map(k => map[k] ?? Colours.palette.m3outlineVariant);
+        return root.chipKeys.map(k => map[k] ?? Colours.palette.m3outlineVariant);
     }
 
-    component SchemeCard: Item {
-        id: card
+    /// Parses `caelestia wallpaper -p` JSON scheme output into swatch chip colours.
+    function parseJsonChips(text: string): var {
+        let colours = {};
+        try {
+            colours = JSON.parse(text).colours ?? {};
+        } catch (e) {}
+        return root.chipKeys.map(k => colours[k] ? `#${colours[k]}` : Colours.palette.m3outlineVariant);
+    }
+
+    component SchemeCard: SchemeCardBase {
+        id: schemeCard
 
         required property var modelData
 
-        readonly property bool current: Schemes.isCurrent(modelData.name, modelData.flavour)
         readonly property string mode: {
             const preferred = Colours.light ? "light" : "dark";
             return modelData.modes.includes(preferred) ? preferred : (modelData.modes[0] ?? "dark");
         }
         readonly property string schemeFile: `${modelData.dir}/${mode}.txt`
-        property var chips: []
 
-        width: 150
-        height: 132
+        current: Schemes.isCurrent(modelData.name, modelData.flavour)
+        label: modelData.name
+        subtext: modelData.flavour
 
         FileView {
-            path: card.schemeFile
+            path: schemeCard.schemeFile
             watchChanges: false
-            onLoaded: card.chips = root.parseChips(text())
+            onLoaded: schemeCard.chips = root.parseChips(text())
         }
 
-        MouseArea {
-            id: clickArea
+        onActivated: Schemes.apply(modelData.name, modelData.flavour)
+    }
 
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: Schemes.apply(card.modelData.name, card.modelData.flavour)
-        }
+    /// The wallpaper-derived dynamic scheme, with a live preview of the
+    /// colours the current wallpaper would produce.
+    component DynamicCard: SchemeCardBase {
+        id: dynamicCard
 
-        Rectangle {
-            id: swatch
+        current: Colours.scheme === "dynamic"
+        label: "Dynamic"
+        subtext: "wallpaper"
 
-            anchors.top: parent.top
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 132
-            height: 84
-            radius: Tokens.rounding.medium
-            clip: true
-            color: Colours.palette.m3surfaceContainerHigh
-            border.width: card.current ? 2 : 0
-            border.color: Colours.palette.m3primary
+        Process {
+            id: previewProc
 
-            Behavior on border.width {
-                Anim {}
-            }
-
-            Row {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 6
-
-                Repeater {
-                    model: card.chips
-
-                    Rectangle {
-                        required property var modelData
-
-                        width: (parent.width - parent.spacing * 4) / 5
-                        height: parent.height
-                        radius: (width / 2) * 0.6
-                        color: modelData
-
-                        Behavior on color {
-                            CAnim {}
-                        }
-                    }
-                }
-            }
-
-            MaterialIcon {
-                visible: card.current
-                anchors.top: parent.top
-                anchors.right: parent.right
-                anchors.margins: 6
-                text: "check_circle"
-                color: Colours.palette.m3primary
-                fontStyle: Tokens.font.icon.small
+            stdout: StdioCollector {
+                onStreamFinished: dynamicCard.chips = root.parseJsonChips(text)
             }
         }
 
-        StyledText {
-            id: name
-
-            anchors.top: swatch.bottom
-            anchors.topMargin: Tokens.spacing.small
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: card.modelData.name
-            font: Tokens.font.body.medium
+        function refreshPreview(): void {
+            if (!Wallpapers.current)
+                return;
+            previewProc.command = ["caelestia", "wallpaper", "-p", Wallpapers.current];
+            previewProc.running = true;
         }
 
-        StyledText {
-            anchors.top: name.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: card.modelData.flavour
-            color: Colours.palette.m3outline
-            font: Tokens.font.label.small
+        Component.onCompleted: dynamicCard.refreshPreview()
+
+        Connections {
+            target: Wallpapers
+
+            function onCurrentChanged(): void {
+                dynamicCard.refreshPreview();
+            }
         }
+
+        Connections {
+            target: Colours
+
+            function onLightChanged(): void {
+                dynamicCard.refreshPreview();
+            }
+        }
+
+        onActivated: Schemes.applyDynamic()
     }
 
     ColumnLayout {
@@ -165,6 +146,8 @@ Item {
             Flow {
                 width: parent.width
                 spacing: Tokens.spacing.large
+
+                DynamicCard {}
 
                 Repeater {
                     model: Schemes.schemes

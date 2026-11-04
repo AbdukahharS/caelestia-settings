@@ -25,6 +25,13 @@ Singleton {
         applyProc.running = true;
     }
 
+    /// Applies the wallpaper-derived dynamic scheme, keeping the variant and
+    /// flavour persisted by the CLI.
+    function applyDynamic(): void {
+        applyProc.command = ["caelestia", "scheme", "set", "--notify", "-n", "dynamic", "-m", Colours.light ? "light" : "dark"];
+        applyProc.running = true;
+    }
+
     function setMode(mode: string): void {
         Colours.setMode(mode);
     }

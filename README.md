@@ -6,7 +6,7 @@ Quickshell app that reuses Caelestia's own QML components — same fonts, colour
 
 Currently manages:
 
-- **Style** — Caelestia colour schemes (swatch previews, apply, light/dark)
+- **Style** — Caelestia colour schemes plus the wallpaper-derived dynamic scheme (swatch previews, apply, light/dark)
 - **Shell** — bar, launcher, sidebar and service settings (writes `~/.config/caelestia/shell.json` via `GlobalConfig`, the same API the shell itself uses)
 - **Hyprland** — gaps, rounding, blur, shadow, input, default apps (writes the Caelestia override layer `~/.config/caelestia/hypr-vars.lua`, applies instantly via `hyprctl keyword`)
 
