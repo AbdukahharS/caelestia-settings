@@ -46,6 +46,10 @@ hl.bind(
 )
 ```
 
+Launching while an instance is already running never opens a second one:
+the duplicate focuses the running window and exits before it can touch any
+config file.
+
 ### App launcher
 
 Registered system-wide as **"Caelestia Settings"** via
