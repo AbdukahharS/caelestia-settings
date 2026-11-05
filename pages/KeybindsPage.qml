@@ -4,11 +4,11 @@ import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
 import qs.components
-import qs.components.containers
 import qs.components.controls
 import qs.core
 import qs.services
 import qs.modules.nexus.common
+import qs.ui
 import "KeyNames.js" as KeyNames
 
 /// Hyprland keybind editor via Caelestia's override layer (hypr-vars.lua).
@@ -24,10 +24,8 @@ import "KeyNames.js" as KeyNames
 ///     Conflicting chips are outlined so a free combo can be picked.
 ///   - Mouse events never arrive as key events; binds containing `mouse`
 ///     tokens are edited as text instead.
-Item {
+SettingsPage {
     id: root
-
-    readonly property real cappedWidth: Math.min(Tokens.sizes.nexus.maxContentWidth, width)
 
     // Section names in display order — schema entries are contiguous per
     // section, so adjacent-equal check suffices.
@@ -434,79 +432,57 @@ Item {
         }
     }
 
-    StyledFlickable {
-        anchors.fill: parent
-        contentWidth: width
-        contentHeight: column.implicitHeight + Tokens.padding.extraLarge * 2
+    title: "Keybinds"
+
+    headerActions: [
+        TextButton {
+            text: "Reload Hyprland"
+
+            onClicked: HyprVars.reloadHypr()
+        }
+    ]
+
+    InfoBanner {
+        Layout.bottomMargin: Tokens.spacing.largeIncreased
+        text: "Click a bind chip to press a new key combination. Combos Hyprland already consumes never reach this window — the old action fires instead, so outlined chips mark conflicts with another action. Binds containing mouse events open a text editor."
+    }
+
+    Repeater {
+        model: root.sections
 
         ColumnLayout {
-            id: column
+            id: sectionCol
 
-            x: (root.width - root.cappedWidth) / 2
-            y: Tokens.padding.extraLarge
-            width: root.cappedWidth
-            spacing: Tokens.spacing.extraLargeIncreased
+            required property string modelData
+            required property int index
 
-            RowLayout {
-                Layout.fillWidth: true
+            readonly property var entries: root.entriesFor(sectionCol.modelData)
 
-                StyledText {
-                    text: "Keybinds"
-                    font: Tokens.font.title.large
-                    Layout.fillWidth: true
-                }
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.extraSmall / 2
 
-                TextButton {
-                    text: "Reload Hyprland"
-                    onClicked: HyprVars.reloadHypr()
-                }
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: "Click a bind to press a new key combination. Combos already used by another action are handled by Hyprland first — nothing is captured and the old action fires, so pick a free combination or clear the conflicting bind first (outlined chips conflict). Binds with mouse events are edited as text."
-                color: Colours.palette.m3outline
-                font: Tokens.font.label.medium
-                wrapMode: Text.WordWrap
+            SectionHeader {
+                first: sectionCol.index === 0
+                text: sectionCol.modelData
             }
 
             Repeater {
-                model: root.sections
+                model: sectionCol.entries
 
-                ColumnLayout {
-                    id: sectionCol
-
-                    required property string modelData
-                    required property int index
-
-                    readonly property var entries: root.entriesFor(sectionCol.modelData)
-
-                    Layout.fillWidth: true
-                    spacing: Tokens.spacing.extraLargeIncreased
-
-                    SectionHeader {
-                        first: sectionCol.index === 0
-                        text: sectionCol.modelData
-                    }
-
-                    Repeater {
-                        model: sectionCol.entries
-
-                        KeybindRow {
-                            first: index === 0
-                            last: index === sectionCol.entries.length - 1
-                        }
-                    }
+                KeybindRow {
+                    first: index === 0
+                    last: index === sectionCol.entries.length - 1
                 }
             }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: "Changes write to hypr-vars.lua (values matching variables.lua are removed) and reload Hyprland immediately."
-                color: Colours.palette.m3outline
-                font: Tokens.font.label.medium
-                wrapMode: Text.WordWrap
-            }
         }
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        Layout.topMargin: Tokens.spacing.extraLargeIncreased
+        text: "Changes write to hypr-vars.lua (values matching variables.lua are removed) and reload Hyprland immediately."
+        color: Colours.palette.m3outline
+        font: Tokens.font.label.medium
+        wrapMode: Text.WordWrap
     }
 }

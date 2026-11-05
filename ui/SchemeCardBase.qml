@@ -5,9 +5,10 @@ import Caelestia.Config
 import qs.components
 import qs.services
 
-/// Shared visual chrome for the Style tab's scheme cards: swatch chips,
-/// current-scheme highlight and labels. Subtypes provide `chips`, `label`,
-/// `subtext` and `current`, and react to `activated()`.
+/// Shared visual chrome for the Style tab's scheme cards: card surface with
+/// hover/press state layer, swatch chips, current-scheme highlight, keyboard
+/// focus ring and labels. Subtypes provide `chips`, `label`, `subtext` and
+/// `current`, and react to `activated()`.
 Item {
     id: root
 
@@ -18,13 +19,36 @@ Item {
 
     signal activated()
 
-    width: 150
-    height: 132
+    width: 164
+    height: 158
 
-    MouseArea {
+    activeFocusOnTab: true
+
+    Keys.onReturnPressed: root.activated()
+    Keys.onSpacePressed: root.activated()
+
+    StyledRect {
+        id: card
+
         anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
+        radius: Tokens.rounding.large
+        color: Colours.tPalette.m3surfaceContainerLow
+    }
+
+    StateLayer {
+        anchors.fill: parent
+        radius: Tokens.rounding.large
+
         onClicked: root.activated()
+    }
+
+    // Keyboard focus ring, above the state layer.
+    Rectangle {
+        anchors.fill: parent
+        color: "transparent"
+        radius: Tokens.rounding.large
+        border.width: root.activeFocus ? 2 : 0
+        border.color: Colours.palette.m3primary
     }
 
     Rectangle {
@@ -32,8 +56,9 @@ Item {
 
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 132
-        height: 84
+        anchors.topMargin: Tokens.padding.medium
+        width: parent.width - Tokens.padding.largeIncreased * 2
+        height: 90
         radius: Tokens.rounding.medium
         clip: true
         color: Colours.palette.m3surfaceContainerHigh
@@ -84,15 +109,21 @@ Item {
         anchors.top: swatch.bottom
         anchors.topMargin: Tokens.spacing.small
         anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width - Tokens.padding.small * 2
+        horizontalAlignment: Text.AlignHCenter
         text: root.label
         font: Tokens.font.body.medium
+        elide: Text.ElideRight
     }
 
     StyledText {
         anchors.top: name.bottom
         anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width - Tokens.padding.small * 2
+        horizontalAlignment: Text.AlignHCenter
         text: root.subtext
         color: Colours.palette.m3outline
         font: Tokens.font.label.small
+        elide: Text.ElideRight
     }
 }

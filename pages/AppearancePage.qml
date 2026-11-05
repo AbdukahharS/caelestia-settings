@@ -5,14 +5,13 @@ import QtQuick.Layouts
 import Quickshell.Io
 import Caelestia.Config
 import qs.components
-import qs.components.containers
 import qs.components.controls
 import qs.core
 import qs.services
-import qs.ui
 import qs.modules.nexus.common
+import qs.ui
 
-Item {
+SettingsPage {
     id: root
 
     readonly property list<string> chipKeys: ["primary", "primaryContainer", "secondaryContainer", "tertiaryContainer", "surfaceContainerHigh"]
@@ -106,55 +105,45 @@ Item {
         onActivated: Schemes.applyDynamic()
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: Tokens.padding.extraLarge
-        spacing: Tokens.spacing.largeIncreased
+    title: "Style"
 
-        RowLayout {
-            Layout.fillWidth: true
+    headerActions: [
+        IconButton {
+            icon: "refresh"
 
-            StyledText {
-                text: "Style"
-                font: Tokens.font.title.large
-                Layout.fillWidth: true
-            }
-
-            ToggleRow {
-                text: "Light mode"
-                checked: Colours.light
-                onToggled: Schemes.setMode(checked ? "light" : "dark")
-            }
-
-            IconButton {
-                icon: "refresh"
-                onClicked: Schemes.refresh()
-            }
+            onClicked: Schemes.refresh()
         }
+    ]
 
-        StyledText {
-            text: "Colour scheme"
-            color: Colours.palette.m3onSurfaceVariant
-            font: Tokens.font.title.medium
-        }
+    SectionHeader {
+        first: true
+        text: "Appearance"
+    }
 
-        StyledFlickable {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            contentWidth: width
+    ToggleRow {
+        first: true
+        last: true
+        text: "Light mode"
+        subtext: "Switch the palette between light and dark"
+        checked: Colours.light
+        onToggled: Schemes.setMode(checked ? "light" : "dark")
+    }
 
-            Flow {
-                width: parent.width
-                spacing: Tokens.spacing.large
+    SectionHeader {
+        text: "Colour scheme"
+    }
 
-                DynamicCard {}
+    Flow {
+        Layout.fillWidth: true
+        Layout.topMargin: Tokens.spacing.small
+        spacing: Tokens.spacing.large
 
-                Repeater {
-                    model: Schemes.schemes
+        DynamicCard {}
 
-                    SchemeCard {}
-                }
-            }
+        Repeater {
+            model: Schemes.schemes
+
+            SchemeCard {}
         }
     }
 }

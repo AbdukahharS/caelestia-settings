@@ -4,7 +4,6 @@ import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
 import qs.components
-import qs.components.containers
 import qs.components.controls
 import qs.core
 import qs.services
@@ -14,10 +13,8 @@ import qs.ui
 /// Hyprland settings via Caelestia's override layer (hypr-vars.lua).
 /// Changes apply instantly via `hyprctl keyword` where a keyword mapping
 /// exists; everything persists for the next reload/startup.
-Item {
+SettingsPage {
     id: root
-
-    readonly property real cappedWidth: Math.min(Tokens.sizes.nexus.maxContentWidth, width)
 
     component NumRow: StepperRow {
         property var e
@@ -87,139 +84,120 @@ Item {
         }
     }
 
-    StyledFlickable {
-        anchors.fill: parent
-        contentWidth: width
-        contentHeight: column.implicitHeight + Tokens.padding.extraLarge * 2
+    title: "Hyprland"
 
-        ColumnLayout {
-            id: column
+    headerActions: [
+        TextButton {
+            text: "Reload Hyprland"
 
-            x: (root.width - root.cappedWidth) / 2
-            y: Tokens.padding.extraLarge
-            width: root.cappedWidth
-            spacing: Tokens.spacing.extraLargeIncreased
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                StyledText {
-                    text: "Hyprland"
-                    font: Tokens.font.title.large
-                    Layout.fillWidth: true
-                }
-
-                TextButton {
-                    text: "Reload Hyprland"
-                    onClicked: HyprVars.reloadHypr()
-                }
-            }
-
-            // Gaps & corners
-            SectionHeader {
-                first: true
-                text: "Gaps & corners"
-            }
-
-            NumRow {
-                first: true
-                e: HyprVars.entry("windowGapsIn")
-            }
-
-            NumRow {
-                e: HyprVars.entry("windowGapsOut")
-            }
-
-            NumRow {
-                e: HyprVars.entry("workspaceGaps")
-            }
-
-            NumRow {
-                last: true
-                e: HyprVars.entry("windowRounding")
-            }
-
-            // Blur
-            SectionHeader {
-                text: "Blur"
-            }
-
-            BoolRow {
-                first: true
-                e: HyprVars.entry("blurEnabled")
-            }
-
-            NumRow {
-                e: HyprVars.entry("blurSize")
-            }
-
-            NumRow {
-                e: HyprVars.entry("blurPasses")
-            }
-
-            BoolRow {
-                last: true
-                e: HyprVars.entry("blurXray")
-            }
-
-            // Shadow
-            SectionHeader {
-                text: "Shadow"
-            }
-
-            BoolRow {
-                first: true
-                e: HyprVars.entry("shadowEnabled")
-            }
-
-            NumRow {
-                last: true
-                e: HyprVars.entry("shadowRange")
-            }
-
-            // Input
-            SectionHeader {
-                text: "Input"
-            }
-
-            PercentRow {
-                first: true
-                e: HyprVars.entry("touchpadScrollFactor")
-            }
-
-            NumRow {
-                last: true
-                e: HyprVars.entry("cursorSize")
-            }
-
-            // Apps
-            SectionHeader {
-                text: "Apps"
-            }
-
-            AppRow {
-                e: HyprVars.entry("terminal")
-            }
-
-            AppRow {
-                e: HyprVars.entry("browser")
-            }
-
-            AppRow {
-                e: HyprVars.entry("editor")
-            }
-
-            AppRow {
-                e: HyprVars.entry("fileExplorer")
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: "App changes take effect on reload. Values matching the defaults in variables.lua are not written to hypr-vars.lua."
-                color: Colours.palette.m3outline
-                font: Tokens.font.label.medium
-                wrapMode: Text.WordWrap
-            }
+            onClicked: HyprVars.reloadHypr()
         }
+    ]
+
+    // Gaps & corners
+    SectionHeader {
+        first: true
+        text: "Gaps & corners"
+    }
+
+    NumRow {
+        first: true
+        e: HyprVars.entry("windowGapsIn")
+    }
+
+    NumRow {
+        e: HyprVars.entry("windowGapsOut")
+    }
+
+    NumRow {
+        e: HyprVars.entry("workspaceGaps")
+    }
+
+    NumRow {
+        last: true
+        e: HyprVars.entry("windowRounding")
+    }
+
+    // Blur
+    SectionHeader {
+        text: "Blur"
+    }
+
+    BoolRow {
+        first: true
+        e: HyprVars.entry("blurEnabled")
+    }
+
+    NumRow {
+        e: HyprVars.entry("blurSize")
+    }
+
+    NumRow {
+        e: HyprVars.entry("blurPasses")
+    }
+
+    BoolRow {
+        last: true
+        e: HyprVars.entry("blurXray")
+    }
+
+    // Shadow
+    SectionHeader {
+        text: "Shadow"
+    }
+
+    BoolRow {
+        first: true
+        e: HyprVars.entry("shadowEnabled")
+    }
+
+    NumRow {
+        last: true
+        e: HyprVars.entry("shadowRange")
+    }
+
+    // Input
+    SectionHeader {
+        text: "Input"
+    }
+
+    PercentRow {
+        first: true
+        e: HyprVars.entry("touchpadScrollFactor")
+    }
+
+    NumRow {
+        last: true
+        e: HyprVars.entry("cursorSize")
+    }
+
+    // Apps
+    SectionHeader {
+        text: "Apps"
+    }
+
+    AppRow {
+        e: HyprVars.entry("terminal")
+    }
+
+    AppRow {
+        e: HyprVars.entry("browser")
+    }
+
+    AppRow {
+        e: HyprVars.entry("editor")
+    }
+
+    AppRow {
+        e: HyprVars.entry("fileExplorer")
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        Layout.topMargin: Tokens.spacing.extraLargeIncreased
+        text: "App changes take effect on reload. Values matching the defaults in variables.lua are not written to hypr-vars.lua."
+        color: Colours.palette.m3outline
+        font: Tokens.font.label.medium
+        wrapMode: Text.WordWrap
     }
 }
