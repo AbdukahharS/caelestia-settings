@@ -168,19 +168,69 @@ FloatingWindow {
             Layout.fillHeight: true
         }
 
+        // Hairline continuation of the sidebar's own edge line.
+        Rectangle {
+            Layout.fillHeight: true
+            implicitWidth: 1
+            color: Colours.palette.m3outlineVariant
+        }
+
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            // Page margins like the shell's own settings window: content
+            // floats clear of the window edges and the sidebar divider.
+            Layout.topMargin: Tokens.padding.extraLarge
+            Layout.rightMargin: Tokens.padding.extraLarge
+            Layout.bottomMargin: Tokens.padding.extraLarge
+            Layout.leftMargin: Tokens.padding.extraLarge
 
             StackLayout {
+                id: pages
+
+                property int previousIndex: 0
+
                 anchors.fill: parent
                 currentIndex: sidebar.current
+
+                // Subtle directional enter transition on page switch: x-slide
+                // + fade only (transform/opacity — never layout geometry),
+                // deceleration easing, within the ≤250ms budget. There is no
+                // reduced-motion setting in the shell to gate this on.
+                onCurrentIndexChanged: {
+                    pages.x = currentIndex >= pages.previousIndex ? 24 : -24;
+                    pages.opacity = 0;
+                    pages.previousIndex = currentIndex;
+                    pageEnter.restart();
+                }
 
                 AppearancePage {}
                 ShellPage {}
                 HyprlandPage {}
                 KeybindsPage {}
                 DisplaysPage {}
+            }
+
+            SequentialAnimation {
+                id: pageEnter
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: pages
+                        property: "x"
+                        to: 0
+                        duration: 220
+                        easing.type: Easing.OutCubic
+                    }
+
+                    NumberAnimation {
+                        target: pages
+                        property: "opacity"
+                        to: 1
+                        duration: 220
+                        easing.type: Easing.OutCubic
+                    }
+                }
             }
         }
     }
